@@ -1,20 +1,21 @@
 # Hello!
 ```ex
-Person.new(%{name: "Ignacio"})
-|> Person.graduate("Electronics Engineer")
-|> Engineer.switch_career(to: "Software Engineer")
-|> Engineer.add_languages(["C", "Python", "JavaScript"], experience: :professional)
-|> Engineer.add_languages(["Elixir", "Rust"], experience: :hobby)
-|> Engineer.add_databases(["PostgreSQL", "MariaDB", "MongoDB"])
-|> Engineer.add_interests(["Distributed Systems", "Cloud", "DevOps"])
-|> Engineer.introduce()
-```
-```ex
-iex> """Hi! My name is Ignacio. I am a software engineer with over 4 years of professional experience.
-I work primarily using Django and React, but I also like learning different technologies and different ways of solving problems.
+myself = 
+  Engineer.new(%{name: "Ignacio", degree: "Electronic Engineering"})
+  |> Engineer.switch_crareer("Software Engineering")
+  |> Engineer.add_languages(["C", "Python", "JavaScript", "Elixir"], level: :professional)
+  |> Engineer.add_languages(["Rust", "Gleam"], level: :hobby)
+  |> Engineer.add_databases(["PostgreSQL", "MariaDB", "MongoDB"])
+  |> Engineer.add_interests(["Distributed Systems", "Cloud", "DevOps"])
 
-I studied Electronics Engineering but I fell in love with Software Engineering while designing circuits and writing simulations for my final project.
-Programming to me is about modeling a problem in such a precise and elegant way that the solution becomes trivial.
-I hope to convey to you the same passion I have for programming and software engineering through this blog! 
+Person.introduce(myself)
+```
+
+```ex
+iex> """
+Hi, my name is Ignacio. I am a Software Engineer with over 4 years of professional experience.
+Over the course of my (short) career, I have worked primarily with Python, Django and React, although currently I am working full time with Elixir as a primary language.
+
+In this blog you can find my opinions and some small guides for solutions that I have implemented at work or for side projects that I could not find on the internet.
 """
 ```
