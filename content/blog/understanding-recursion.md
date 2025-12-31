@@ -66,7 +66,7 @@ def sum([e1 | rest]), do: e1 + sum(rest)
 ```
 Only two lines😎
 
-There is one small problem with that recursive solution, which is also why recursion is discouraged in most langauges: If the array is too long, that code can cause a stack overflow. Thankfully we can switch to a version that can recurse indefinitely with **tail call optimization**
+There is one small problem with that recursive solution, which is also why recursion is discouraged in most languages: If the array is too long, that code can cause a stack overflow. Thankfully we can switch to a version that can call itself indefinitely with **tail call optimization**
 
 ## Tail Call Optimization
 In simple terms, *tail call* is when the last expression of a function is another function call. This allows the CPU (simplifying a lot) to drop the stack allocations for the current function and allocate the values for the new call. Unfortunately, not all languages support tail call optimization, hence why loops are preferred over recursion in most languages.
@@ -118,7 +118,7 @@ In Elixir
 def affordable(whishlist, budget), do: affordable(whishlist, budget, [])
 def affordable([], _budget, skus), do: skus
 
-# We can also destructure hashmaps in Elixir by key
+# We can also destructure hash maps in Elixir by key
 def affordable([%{"price" => price, "sku" => sku} | rest], budget, skus) when budget >= price, do: affordable(rest, budget - price, [sku | skus])
 
 def affordable(_whishlist, _budget, skus), do: skus

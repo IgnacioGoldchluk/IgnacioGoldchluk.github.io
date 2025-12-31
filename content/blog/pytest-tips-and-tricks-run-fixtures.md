@@ -11,7 +11,7 @@ tags = []
 +++
 
 ## Skippable introduction
-I write tests, lots of tests, thousands of tests. I often buid an entire codebase, parallel to the actual production codebase, just for testing, full of factories and helper functions. I could go on explaining why, but that's not the point of this post.
+I write tests, lots of tests, thousands of tests. I often build an entire codebase, parallel to the actual production codebase, just for testing, full of factories and helper functions. I could go on explaining why, but that's not the point of this post.
 
 The point is, code evolves, and business logic changes. Best case scenario, tests start failing because the test code is no longer valid. Worst case scenario, tests still pass, and you should question what on earth were you testing this whole time then.
 

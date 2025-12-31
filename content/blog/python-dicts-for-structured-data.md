@@ -10,7 +10,7 @@ date = "2023-12-27T21:54:51-03:00"
 tags = [ ]
 +++
 
-Despite its extensive standard library, Python does not have **record** or **struct** like data structures. **dict** became the de facto data type for both structured and structured data. This lead to the use (and abuse) of "ad hoc" structures that can only be understood by digging through the codebase. It is not uncommon to find legacy code like this
+Despite its extensive standard library, Python does not have **record** or **struct** like data structures. **dict** became the de facto data type for both structured and structured data. This lead to the use (and abuse) of "ad-hoc" structures that can only be understood by digging through the codebase. It is not uncommon to find legacy code like this
 ```py
 def parse(data):
     ...
@@ -204,7 +204,7 @@ One final caveat: By default, Pydantic attempts to cast the input to the expecte
 Book(**{"title": "The Alchemist", "year_of_publication": "1988"})
 ```
 
-Pydantic provides better safety, functionality and runtime guarantees compared to plain Dataclasses, and it is incredibly extensible and customizable, wich also means one can get overwhelmed with so much customization options, models, etc.
+Pydantic provides better safety, functionality and runtime guarantees compared to plain Dataclasses, and it is incredibly extensible and customizable, which also means one can get overwhelmed with so much customization options, models, etc.
 
 As of writing this blog, Pydantic has recently gone through a major version update (1. -> 2.) with multiple breaking changes. It is likely that you will have to rely mostly on the official docs for learning and development, since most of the tutorials, blog articles, etc. are written for the 1.X versions.
 

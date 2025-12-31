@@ -36,12 +36,12 @@ Which is the equivalent of me explaining how not to introduce division by zero e
 def divide_by_zero(number: int):
     return number / 0
 ```
-Exemplifying the N+1 queries problem by showing that kind of trivial example makes it even more dangerous. It leads us to believe that since we did not write any loop where we access nested attributes, there is no way we could have introduced the N+1 queries problem in our codebase. The fact is, we can introduce the N+1 problem without witing a single loop, and unfortunately Django is extremely susceptible to this problem due to the aforementioned implicit query execution.
+Exemplifying the N+1 queries problem by showing that kind of trivial example makes it even more dangerous. It leads us to believe that since we did not write any loop where we access nested attributes, there is no way we could have introduced the N+1 queries problem in our codebase. The fact is, we can introduce the N+1 problem without writing a single loop, and unfortunately Django is extremely susceptible to this problem due to the aforementioned implicit query execution.
 
 In the following example we are going to accidentally introduce an N+1 queries problem, identify it, fix it, and learn how to prevent it in the future. 
 
 ## Example
-We are working on the new [Steam](https://en.wikipedia.org/wiki/Steam_(service)) and we have the task to implement the `players` endpoint to retrieve the list of players, which videogames they've played and for how long. The JSON response must have the following format
+We are working on the new [Steam](https://en.wikipedia.org/wiki/Steam_(service)) and we have the task to implement the `players` endpoint to retrieve the list of players, which video games they've played and for how long. The JSON response must have the following format
 ```
 [
   {
@@ -185,7 +185,7 @@ We run `pytest` and the test passes, great. We can praise ourselves (and Django)
 #### Number of queries
 Let's add one more test to verify how many DB queries the new endpoint is performing. Let's create 20 players with 20 games each *(1)*, since it seems like a reasonable number for a future paginated response. Thanks to the `django_assert_max_num_queries` fixture from `pytest-django` we can easily verify how many queries we've made. We'll take a guess for now and set a max of 5 queries *(1)*, sounds like a reasonable number right?
 
-*(1) I am an enigneer, I am legally allowed (and sometimes encouraged) to define random numbers heuristically*
+*(1) I am an engineer, I am legally allowed (and sometimes encouraged) to define random numbers heuristically*
 ```py
 # test/games/test_views.py
 @pytest.mark.django_db
@@ -236,7 +236,7 @@ Looks like we have an N+1 problem, well actually an N^2 problem. Now you see why
 #### prefetch_related for one to many
 Let's start with the easiest part. We can fetch all the `PlayTime` records in a single query with the `prefetch_related` method. `prefetch_related` works by performing a single query for all the related objects separately and then joins the result in Python.
 
-Let's add a `prefetch_related("playtimes")` to the `queryset` atribute of our view
+Let's add a `prefetch_related("playtimes")` to the `queryset` attribute of our view
 ```py
 # games/views.py
 class PlayerView(generics.ListAPIView):
