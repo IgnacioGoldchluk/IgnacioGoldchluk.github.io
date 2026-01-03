@@ -1,4 +1,4 @@
-# Hello!
+# Hello
 ```ex
 myself = 
   Engineer.new(%{name: "Ignacio", degree: "Electronic Engineering"})

@@ -44,7 +44,7 @@ The second case would never execute, because `other` matches everything.
 
 Now, to the examples.
 
-## First Example: Sum of an array
+## First Example: sum of an array
 This is the most basic example I can think of that some people still struggle to think about recursively. We are given an array of `elements` that support addition, and we have to return its sum.
 
 The imperative-style solution would look like this
@@ -66,7 +66,7 @@ def sum([e1 | rest]), do: e1 + sum(rest)
 ```
 Only two lines😎
 
-There is one small problem with that recursive solution, which is also why recursion is discouraged in most languages: If the array is too long, that code can cause a stack overflow. Thankfully we can switch to a version that can call itself indefinitely with **tail call optimization**
+There is one small problem with that recursive solution, which is also why recursion is discouraged in most languages: if the array is too long, that code can cause a stack overflow. Thankfully we can switch to a version that can call itself indefinitely with **tail call optimization**
 
 ## Tail Call Optimization
 In simple terms, *tail call* is when the last expression of a function is another function call. This allows the CPU (simplifying a lot) to drop the stack allocations for the current function and allocate the values for the new call. Unfortunately, not all languages support tail call optimization, hence why loops are preferred over recursion in most languages.
@@ -99,7 +99,7 @@ sum([], 9), do: 9
 ```
 
 ### A More Complex Example
-Let's now do a more complex case: We have `item` maps with `sku` and `price`, an array of such items called `whishlist`, and a `budget`. We need to return a list of all the `sku` that we can buy with our `budget`.
+Let's now do a more complex case: we have `item` maps with `sku` and `price`, an array of such items called `whishlist`, and a `budget`. We need to return a list of all the `sku` that we can buy with our `budget`.
 
 In Python, imperative style
 ```py

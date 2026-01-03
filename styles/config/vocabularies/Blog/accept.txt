@@ -1,0 +1,3 @@
+(?i)pytest
+(?i)postgres
+(?i)Viewstamped

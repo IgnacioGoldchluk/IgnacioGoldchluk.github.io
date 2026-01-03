@@ -11,7 +11,7 @@ tags = []
 +++
 
 ## Problem Description
-Paraphrasing the problem to more formal therms: Given a list of contiguous vertices `(x, y)`, where `x` and `y` are non-negative integers, of a *simple* rectilinear polygon, find the area of the largest rectangle contained inside the polygon where 2 of the opposite corners are also vertices of the polygon.
+Paraphrasing the problem to more formal terms: given a list of contiguous vertices `(x, y)`, where `x` and `y` are non-negative integers, of a *simple* rectilinear polygon, find the area of the largest rectangle contained inside the polygon where 2 of the opposite corners are also vertices of the polygon.
 
 ### Observations
 - The input contains 496 vertices, and therefore 122760 (496C2) possible rectangles.
@@ -22,7 +22,7 @@ Paraphrasing the problem to more formal therms: Given a list of contiguous verti
 ## Solution
 The first part is trivial, which is to generate all possible candidate rectangles sorted by area in descending order. The second part is trickier, because we have to determine whether the rectangle formed is fully contained inside the polygon.
 
-The "eureka moment" is to realize that we do not have to check that all the points are inside the candidate rectangle, but rather that no side of the polygon fully or partially crosses the candidate rectangle. The sides of the polygon are every pair of two contiguous vertices from the input, plus the pair formed by the first and last vertex to close the loop. In order to determine whether a side crosses the rectangle we have two cases:
+The "eureka moment" is to realize that we don't have to check that all the points are inside the candidate rectangle, but rather that no side of the polygon fully or partially crosses the candidate rectangle. The sides of the polygon are every pair of two contiguous vertices from the input, plus the pair formed by the first and last vertex to close the loop. In order to determine whether a side crosses the rectangle we have two cases:
 - Horizontal line (fixed `x` value) spanning from `ylmin` to `ylmax` in the `y` axes. If `xmin < x < xmax` and NOT `ylmin > ymax || ylmax < ylmin` then the line crosses the rectangle and we discard the candidate.
 - Vertical line (fixed `y` value) spanning from `xlmin` to `xlmax` in the `x` axes. If `ymin < y < ymax` and NOT `xlmin > xmax || xlmax < xlmin` then the line crosses the rectangle and we discard the candidate.
 

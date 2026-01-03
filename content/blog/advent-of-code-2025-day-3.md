@@ -42,6 +42,6 @@ The algorithm then would be the following
 For accumulating the result there are three choices:
 - Create an array and convert all the digits to an integer when we reach the base case
 - Multiply the current accumulator by 10 and pass it to the function call
-- **Non Tail-Call Optimized**: Multiply the current max digit by `10 ** (n - 1)` and add the result of the next function call
+- **Non Tail-Call Optimized**: multiply the current max digit by `10 ** (n - 1)` and add the result of the next function call
 
 Since [my solution is in Rust](https://github.com/IgnacioGoldchluk/advent-of-code-2025/blob/main/src/solutions/day3.rs), which does not have stable tail-call optimization yet, I went with the 3rd option, but it is trivial to convert it to a TCO case by adding an accumulator as an argument.

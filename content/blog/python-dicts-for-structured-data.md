@@ -60,7 +60,7 @@ def parse(data: Author):
     ...
 ```
 
-Much better! We do not have to navigate through the code to find out what `data` contains. However, we now have to modify the code to construct `Author` from `data`. Also, remember that type hints are just **hints**, and not enforced by the interpreter at runtime. The following code will run successfully
+Much better! We don't have to navigate through the code to find out what `data` contains. However, we now have to modify the code to construct `Author` from `data`. Also, remember that type hints are just **hints**, and not enforced by the interpreter at runtime. The following code will run successfully
 ```py
 book = Book(title="The Alchemist", year_of_publication="More than 30 years ago")
 ```
@@ -117,7 +117,7 @@ Author(name='Paulo Coelho', year_of_birth=1947, books=[Book(title='The Alchemist
 ```
 
 ## TypedDict
-Introduced in Python 3.8, [**TypedDict**](https://docs.python.org/3/library/typing.html#typing.TypedDict) are (as the name suggests) type annotations for dicts. **TypedDict** are still dicts under the hood. Similar to Dataclasses, we have to use a type checker to catch errors. They are more straightforward to implement than Dataclasses since we do not have to modify the existing code at all, only define the TypedDict and update the function header. The example would be as follows
+Introduced in Python 3.8, [**TypedDict**](https://docs.python.org/3/library/typing.html#typing.TypedDict) are (as the name suggests) type annotations for dicts. **TypedDict** are still dicts under the hood. Similar to Dataclasses, we have to use a type checker to catch errors. They are more straightforward to implement than Dataclasses since we don't have to modify the existing code at all, only define the TypedDict and update the function header. The example would be as follows
 ```py
 from typing import TypedDict
 
@@ -199,7 +199,7 @@ pydantic_core._pydantic_core.ValidationError: 1 validation error for Author
     For further information visit https://errors.pydantic.dev/2.5/v/assertion_error
 ```
 
-One final caveat: By default, Pydantic attempts to cast the input to the expected type. The following code succeeds because the string "1988" can be casted to an `int`.
+One final caveat: by default, Pydantic attempts to cast the input to the expected type. The following code succeeds because the string "1988" can be casted to an `int`.
 ```py
 Book(**{"title": "The Alchemist", "year_of_publication": "1988"})
 ```
