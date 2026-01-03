@@ -1,3 +1,7 @@
 (?i)pytest
 (?i)postgres
 (?i)Viewstamped
+(?i)hashmap(s?)
+(?i)enum(s?)
+(?i)enumerable(s?)
+(?i)iterable(s?)

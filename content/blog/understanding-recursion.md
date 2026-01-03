@@ -5,29 +5,29 @@ date = "2025-12-28T19:37:22+02:00"
 #
 # description is optional
 #
-# description = "How to code in a language that does not support loops"
+# description = "How to code in a language that doesn't support loops"
 
 tags = []
 +++
 
-# How we write code in a functional language (or, understanding recursion)
+# Writing code in a functional language, or, understanding recursion
 
-**TLDR: tail call recursion**
+**In summary: tail call recursion**
 
-I program primarily using a functional language (Elixir). More than once, other developer has asked me about my job, and they were intrigued and confused about the fact that Elixir lacks several features that are *essential* to write any useful program. Elixir (as most functional languages) does not have `while` and `for`[1] loops, neither `break`, `continue`, nor early `return`, oh and also all variables are immutable!?. So how do you write code in such a *limited* language? Easy (well, simple), using [**recursion**](#recursion)!
+Have you ever wondered how to write production code in Elixir or any other functional languages? Languages that don't support `while` and `for`[1] loops, `break`, `continue`, early `return` nor mutable variables. More than once, developers familiar with other paradigms, such as object-oriented or procedural, don't understand how to structure programs in a language with such limitations. This post explains how to do "real life" stuff using a functional language.
 
 **[1]** The `for` macro in Elixir behaves differently from a `for` loop in most languages, see [the official docs](https://hexdocs.pm/elixir/comprehensions.html)
 
 ## Recursion
-According to Wikipedia [recursion](#recursion) is defined as *a method of solving a computational problem where the solution depends on solutions to smaller instances of the same problem*. It is the same reasoning as *Induction*, we first define the solution for the base case, and then express the general case from the base case.
+The definition of recursion according to Wikipedia [recursion](#recursion) is *a method of solving a computational problem where the solution depends on solutions to smaller instances of the same problem*. Mathematical *Induction* follows the same approach: you first prove the solution for the base case, and then express the general case from the base case.
 
-To better understand how it is done in practice, let's do some very basic examples in Elixir and compare them to the imperative solution in Python. Note that the code might not be idiomatic Elixir because the goal is to make it readable for those unfamiliar with the language, but it serves the purpose for the explanation.
+To better understand how to do it in practice, this blog presents basic examples in Elixir using functional style and compares them to a procedural version implemented in Python. Note that the code might not be idiomatic Elixir because the goal is to make it readable for those unfamiliar with the language, but it serves the purpose for the explanation.
 
 ## Elixir crash course
 The only things you need to know to understand the Elixir examples:
-- `[head | tail]` extracts the "head" (first element) and "tail" (rest) of a list. For example if we have `[1,2,3]` then it assigns `head = 1, tail = [1,2]`
+- `[head | tail]` extracts the first element and the rest of the list. For example, for `[1,2,3]` binds to `head = 1, tail = [1,2]`.
 - The return value of a function is its last expression, and everything is an expression.
-- Functions can be defined multiple times, and the first "matching" function signature from top to bottom is executed.
+- You can define the same function multiple times. Elixir executes the first function clause that matches the input arguments.
 
 For example
 ```ex
@@ -35,19 +35,19 @@ def foo([]), do: nil
 def foo([x]), do: x
 def foo(other), do: ...
 ```
-First tries to match an empty list, then a list with a single element, and then anything else. The order in which the function cases are defined is important, since it goes from top to bottom. If we had defined as
+First tries to match an empty list, then a list with a single element, and then anything else. The order in which you define the functions is important, since they evaluate from top to bottom. If you wrote the clauses in this order
 ```ex
 def foo(other), do: ...
 def foo([x]), do: x
 ```
-The second case would never execute, because `other` matches everything.
+the second case would never execute, because `other` matches everything.
 
 Now, to the examples.
 
-## First Example: sum of an array
-This is the most basic example I can think of that some people still struggle to think about recursively. We are given an array of `elements` that support addition, and we have to return its sum.
+## First example: sum of an array
+Perhaps the simplest example of a function that you can express recursively. Given an array of `elements` that support addition, write a function that returns the sum of all the elements.
 
-The imperative-style solution would look like this
+The imperative-style solution in Python would look like this
 ```py
 def sum(elements):
     acc = 0
@@ -55,9 +55,9 @@ def sum(elements):
         acc += el
     return acc
 ```
-(Yes, I know you can do `sum(elements)` in Python, you can also do `Enum.sum(elements)` in Elixir, that's not the point of this post)
+NdR: you can do `sum(elements)` in Python, same as `Enum.sum(elements)` in Elixir, but that's not the point of this post
 
-Now let's think about the recursive solution. The base case occurs when `elements = []`, in that case the sum is `0`. For the general case of an array `[e1, e2, e3, ..., eN]` we can say that the sum is `e1 + sum([e2, e3, ..., eN])`. Given that the list gets 1 element shorter on each function call, the base case is guaranteed to be reached.
+For the recursive solution you need a base case and a general case. The base case occurs when `elements = []`, in that case the sum is `0`. For the general case of an array `[e1, e2, e3, ..., eN]`, you can express the sum as `e1 + sum([e2, e3, ..., eN])`. Given that the list gets 1 element shorter on each function call, it always reaches the base case.
 
 The functional code in Elixir
 ```ex
@@ -66,12 +66,12 @@ def sum([e1 | rest]), do: e1 + sum(rest)
 ```
 Only two lines😎
 
-There is one small problem with that recursive solution, which is also why recursion is discouraged in most languages: if the array is too long, that code can cause a stack overflow. Thankfully we can switch to a version that can call itself indefinitely with **tail call optimization**
+There is one small problem with the preceding recursive solution, which is also why most non-functional languages discourage the use of recursion: if the array is too long, that code can cause a stack overflow. Thankfully you can fix this by switching to a version that uses **tail call optimization** and can call itself infinitely without exhausting the stack.
 
-## Tail Call Optimization
-In simple terms, *tail call* is when the last expression of a function is another function call. This allows the CPU (simplifying a lot) to drop the stack allocations for the current function and allocate the values for the new call. Unfortunately, not all languages support tail call optimization, hence why loops are preferred over recursion in most languages.
+## Tail call optimization
+In simple terms, *tail call* is when the last expression of a function is another function call. In simple terms, this allows to drop the stack allocations for the current function and allocate the values for the new call. Unfortunately, not all languages support tail call optimization. You should prefer the loop version over the recursive version if your language doesn't support tail-call optimization.
 
-Our `sum` function in Elixir is not tail call optimized because for the general case, the last expression is a `+` that needs to evaluate the right-side expression. If we take for example the array `[3,4,2]` the code would be evaluated as follows
+The `sum` function in Elixir isn't tail call optimized. For the general case, the last expression is a `+` that needs to evaluate the right-side expression. For example the array `[3,4,2]` executes to
 ```
 sum([3, 4, 2]), do: 3 + sum([4, 2])
                         sum([4 | 2]), do: 4 + sum([2])
@@ -80,16 +80,16 @@ sum([3, 4, 2]), do: 3 + sum([4, 2])
 -> 3 + (4 + (2 + (0))) = 9
 ```
 
-Let's change our simple example to be tail call optimized instead.
-
+Changing the simple example to a tail-call optimized version
 ```ex
 def sum(elements), do: sum(elements, 0)
 def sum([], acc), do: acc
 def sum([e1 | rest], acc), do: sum(rest, e1 + acc)
 ```
-We had to slightly tweak our logic by adding an intermediate accumulator and returning it for the base case, which is a common approach when doing tail call optimization.
 
-Now the previous example `[3, 4, 2]` would be evaluated as follows, without increasing the stack allocations
+You can see a common approach for tail-call optimized versions, which is to add an intermediate accumulator for the general case, and returning it in the base case.
+
+Now the previous example `[3, 4, 2]` executes to
 ```
 sum([3, 4, 2]), do: sum([3, 4, 2], 0)
 sum([3 | [4, 2]], 0), do: sum([4, 2], 3)
@@ -98,10 +98,10 @@ sum([2 | []], 7), do: sum([], 9)
 sum([], 9), do: 9
 ```
 
-### A More Complex Example
-Let's now do a more complex case: we have `item` maps with `sku` and `price`, an array of such items called `whishlist`, and a `budget`. We need to return a list of all the `sku` that we can buy with our `budget`.
+### More complex example
+Given a list of `item` containing `sku` and `price` called `whishlist` and a positive `budget`, the function must return a list of all the items' `sku` that the `budget` can afford, in order of appearance.
 
-In Python, imperative style
+Python, imperative style
 ```py
 def affordable(whishlist, budget):
     skus = []
@@ -123,12 +123,12 @@ def affordable([%{"price" => price, "sku" => sku} | rest], budget, skus) when bu
 
 def affordable(_whishlist, _budget, skus), do: skus
 ```
-1. The first definition is the entry point of the function, its only purpose is to set the `skus` accumulator to its initial value.
-2. The second definition is the case where we ran out of items, which is implicitly covered in Python. There are no more items to check, hence we return the `skus`.
-3. The third case uses a `when` guard with the reversed logic as the `if` statement in Python. If adding the item's `price` does not go over `budget` then we set the new `budget`, prepend the item's `sku` to `skus` and move to the next item.
-4. The final case is when nothing else matched, i.e. the next item would be above budget and we cannot add it, returning the `skus`.
+1. The first clause is the entry point of the function, its only purpose is to set the `skus` accumulator to its initial value.
+2. The second clause is the case where there are no more items left, returning the accumulated `skus`.
+3. The third clause uses a `when` guard with the reversed logic as the `if` statement in Python. When the item price is lower than the current budget, the code sets the new budget to `budget - price`, adds the `sku` to `skus` and continues to the next item.
+4. The final clause is when nothing matched, meaning the next item's `price` is higher than the current budget, thus returning the accumulated `skus`.
 
-### Final Words
-Hopefully you gained some understanding on how to think recursively. It does require some initial effort to change the way you think, but after some practice it becomes easy. In case you still have issues understanding recursion I highly suggest you read [This excellent post](#) which does a better job explaining the topic.
+### Final words
+Hopefully you gained some understanding on how to think recursively. It does require some initial effort to change the way you think, but after some practice it becomes easy. In case you still have issues understanding recursion you can read [this post](#) which does a better job explaining the topic.
 
-Again, note that production Elixir code is rarely written this way. The [Enum module](https://hexdocs.pm/elixir/Enum.html) from the standard library contains many functions for dealing with enumerables (lists, hashmaps, etc.) and one does not have to reinvent the wheel every time.
+Again, note that production Elixir code is rarely written this way. The [Enum module](https://hexdocs.pm/elixir/Enum.html) from the standard library contains many functions for dealing with enumerables (lists, hashmaps, etc.) that handle common operations such as `Enum.filter`, `Enum.count` and take the enumerable and a filter/map/reduce function.
