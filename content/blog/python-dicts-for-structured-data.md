@@ -1,5 +1,5 @@
 +++
-title = "We can do better than dicts for structured data!"
+title = "You can do better than dicts for structured data"
 date = "2023-12-27T21:54:51-03:00"
 
 #
@@ -10,7 +10,7 @@ date = "2023-12-27T21:54:51-03:00"
 tags = [ ]
 +++
 
-Despite its extensive standard library, Python does not have **record** or **struct** like data structures. **dict** became the de facto data type for both structured and structured data. This lead to the use (and abuse) of "ad-hoc" structures that can only be understood by digging through the codebase. It is not uncommon to find legacy code like this
+Despite its extensive standard library, Python doesn't have **record** or **struct** like data structures. **dict** became the de-facto data type for both structured and structured data. This lead to the use and abuse of "ad-hoc" structures that you can only understand by digging through the codebase. You can often find legacy code like this
 ```py
 def parse(data):
     ...
@@ -21,9 +21,9 @@ def parse(data: dict):
     ...
 ```
 
-What does data contain? what are its allowed keys? which values can the keys have? If you are lucky and the person responsible for that monstrosity still works on the project you can ask them, if not then get ready for some software archeology. In any case, we can, and we **should** do better. Do it for the next poor soul who has to modify that code.
+What does data contain? what are its allowed keys? which values can the keys have? If you are lucky and the person responsible for that monstrosity still works on the project you can ask them, if not then get ready for some software archeology. In any case, you can, and you **should** do better. Do it for the next poor soul who has to modify that code.
 
-Let's explore some options to improve this code. As an (unrealistic and didactic) example, let's pretend `parse(data)` takes a dict representing a writer with their `name`, `year_of_birth` and the `books` they have published. A valid input could be
+There are better options to improve this code. As an example, you can pretend `parse(data)` takes a dict representing a writer with their `name`, `year_of_birth` and the `books` they have published. A valid input could be
 ```py
 {
     "name": "Paulo Coelho",
@@ -33,14 +33,12 @@ Let's explore some options to improve this code. As an (unrealistic and didactic
     ],
 }
 ```
-(I am being generous with `year_of` key. I could have used a more realistic and infamous `date` key, which could be a timestamp, a `datetime` object, a `str`, etc.)
-
-~~(I am also being generous by considering Paulo Coelho to be a writer)~~
+You could have used a more realistic `date` key for `year_of_birth`, which could be a timestamp, a `datetime` object, a `str`, etc.
 
 ## Dataclasses
-Introduced in Python 3.7 standard library, [**Dataclasses**](https://docs.python.org/3/library/dataclasses.html) generate some dunder methods automatically for us based on type annotations. Additionally, they come with handy methods and properties that a regular class does not have, such as `frozen`, `asdict()`, etc.
+Introduced in Python 3.7 standard library, [**Dataclasses**](https://docs.python.org/3/library/dataclasses.html) generate a couple of dunder methods automatically based on type annotations. Additionally, they come with handy methods and properties that a regular class doesn't have, such as `frozen`, `asdict()`, etc.
 
-Using dataclasses, our example could be written as follows
+Using dataclasses, you can write the example as
 ```py
 from dataclasses import dataclass
 
@@ -60,16 +58,16 @@ def parse(data: Author):
     ...
 ```
 
-Much better! We don't have to navigate through the code to find out what `data` contains. However, we now have to modify the code to construct `Author` from `data`. Also, remember that type hints are just **hints**, and not enforced by the interpreter at runtime. The following code will run successfully
+You don't have to navigate through the code to find out what `data` contains. However, you now have to modify the code to construct `Author` from `data`. Also, remember that type hints are just **hints**, and not enforced by the interpreter at runtime. The following code runs successfully
 ```py
 book = Book(title="The Alchemist", year_of_publication="More than 30 years ago")
 ```
-We have to rely on a type checker, such as [mypy](https://mypy-lang.org/), to catch the error
+You have to rely on a type checker, such as [mypy](https://mypy-lang.org/), to catch the error
 ```
 error: Argument "year_of_publication" to "Book" has incompatible type "str"; expected "int"  [arg-type]
 ```
 
-We have to be careful when defining mutable default types. Let's say that an `Author` should be created with an empty list of `books` if a value is not provided. The correct way of doing it would be
+You have to be careful when defining mutable default types. Imagine that an `Author` should have an empty list of `books` as default value. The correct way of doing it would be
 ```py
 from dataclasses import dataclass
 
@@ -100,7 +98,7 @@ produces
 ```py
 Author(name='Paulo Coelho', year_of_birth=1947, books=[{'title': 'The Alchemist', 'year_of_publication': 1988}])
 ```
-We can solve this by implementing the nested parsing inside the [`__post_init__`](https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__) magic method of the parent class.
+You can solve this by implementing the nested parsing inside the [`__post_init__`](https://docs.python.org/3/library/dataclasses.html#dataclasses.__post_init__) magic method of the parent class.
 ```py
 @dataclass
 class Author:
@@ -111,13 +109,13 @@ class Author:
     def __post_init__(self):
         self.books = [Book(**b) for b in self.books]
 ```
-and we get our expected result
+and you get the expected result
 ```py
 Author(name='Paulo Coelho', year_of_birth=1947, books=[Book(title='The Alchemist', year_of_publication=1988)])
 ```
 
 ## TypedDict
-Introduced in Python 3.8, [**TypedDict**](https://docs.python.org/3/library/typing.html#typing.TypedDict) are (as the name suggests) type annotations for dicts. **TypedDict** are still dicts under the hood. Similar to Dataclasses, we have to use a type checker to catch errors. They are more straightforward to implement than Dataclasses since we don't have to modify the existing code at all, only define the TypedDict and update the function header. The example would be as follows
+Introduced in Python 3.8, [**TypedDict**](https://docs.python.org/3/library/typing.html#typing.TypedDict) are type annotations for dicts. **TypedDict** are still dicts under the hood. Similar to Dataclasses, you have to use a type checker to catch errors. **TypedDict** are more straightforward to implement than Dataclasses since you don't have to modify the existing code at all, only define the TypedDict and update the function header. The example would be as follows
 ```py
 from typing import TypedDict
 
@@ -136,10 +134,10 @@ def parse(data: Author):
     ...
 
 ```
-Note that unlike Dataclasses, we cannot define default values. There isn't much to say about TypedDict, so let's move on.
+Note that unlike Dataclasses, you can't define default values. There isn't much to talk about regarding TypedDict.
 
 ## Pydantic
-The only 3rd party option from this list. [Pydantic](https://docs.pydantic.dev/latest/) is a data validation module for Python. While it might look similar to Dataclasses for simple cases, Pydantic classes can get complex and the library is a beast of its own. I will only show a few features of the library, but I highly encourage you to go through the documentation, especially the examples, to get a grasp of how much it can do. For our example, let's start with the same specification we had in our dataclass section.
+The only third party option from this list. [Pydantic](https://docs.pydantic.dev/latest/) is a data validation module for Python. While it might look similar to Dataclasses for simple cases, Pydantic classes can get complex and the library has its learning curve. This post shows only a few features of the library, but you should to go through the documentation, especially the examples, to get a grasp of how much it can do. For the current example, you can start with the same specification from the dataclass section.
 ```py
 from pydantic import BaseModel, Field
 
@@ -158,7 +156,7 @@ class Author(BaseModel):
 def parse(data: Book):
     ...
 ```
-If we now attempt to create an instance with invalid data, we get a runtime error
+If you now attempt to create an instance with invalid data, you get a runtime error
 ```py
 book = Book(title="The Alchemist", year_of_publication="More than 30 years ago")
 ```
@@ -167,7 +165,7 @@ pydantic_core._pydantic_core.ValidationError: 1 validation error for Book
 year_of_publication
   Input should be a valid integer, unable to parse string as an integer [type=int_parsing, input_value='More than 30 years ago', input_type=str]
 ```
-Pydantic is actually performing **data validation** at runtime! In fact, we can write our own custom validators. For example, we can validate that the `Author` name is not empty, and that the `Book` instances were published after the `Author` was born
+Pydantic is actually performing **data validation** at runtime. In fact, you can write your own custom validators. For example, you can validate that the `Author` name isn't empty, and that the `Book` publish year is after the `Author`'s birth date.
 ```py
 from pydantic import BaseModel, Field, model_validator
 
@@ -192,32 +190,32 @@ The following code runs successfully
 ```py
 author = Author(name="Paulo Coelho", year_of_birth=1947, books=[{"title": "The Alchemist", "year_of_publication": 1988}])
 ```
-However, if we change year_of_publication to 1945, it fails as expected
+However, if you change `year_of_publication` to 1945, it fails as expected
 ```
 pydantic_core._pydantic_core.ValidationError: 1 validation error for Author
   Assertion failed, Author cannot contain books published before their birth [type=assertion_error, input_value={'name': 'Paulo Coelho', ...of_publication': 1945}]}, input_type=dict]
     For further information visit https://errors.pydantic.dev/2.5/v/assertion_error
 ```
 
-One final caveat: by default, Pydantic attempts to cast the input to the expected type. The following code succeeds because the string "1988" can be casted to an `int`.
+One final caveat: by default, Pydantic attempts to cast the input to the expected type. The following code succeeds because Pydantic casts the string "1988" to the integer `1988`.
 ```py
 Book(**{"title": "The Alchemist", "year_of_publication": "1988"})
 ```
 
-Pydantic provides better safety, functionality and runtime guarantees compared to plain Dataclasses, and it is incredibly extensible and customizable, which also means one can get overwhelmed with so much customization options, models, etc.
+Pydantic provides better safety, features and runtime guarantees compared to plain Dataclasses, and it's easy to extend and customizable, which also means you can get overwhelmed.
 
-As of writing this blog, Pydantic has recently gone through a major version update (1. -> 2.) with multiple breaking changes. It is likely that you will have to rely mostly on the official docs for learning and development, since most of the tutorials, blog articles, etc. are written for the 1.X versions.
+As of writing this blog, Pydantic has recently gone through a major version update from version 1 to 2, with multiple breaking changes. You have to rely mostly on the official docs for learning the library, since most of the existing tutorials, blog articles, etc. are for the 1.X versions.
 
 # Conclusions
-We explored some of the alternatives to plain dicts for structured data with their pros and cons. To summarize, my suggestions would be:
-1. **Pydantic** when possible. Learn it regardless.
-2. **Dataclasses** when you are allowed to refactor the code but you cannot use Pydantic.
-3. **TypedDict** as last resort when you cannot modify existing code logic.
+This post explored some of the alternatives to plain untyped dicts for structured data, each with their pros and cons. The suggestions of when you should use each one are:
+1. **Pydantic** whenever possible.
+2. **Dataclasses** when you can refactor the code but you can't use Pydantic.
+3. **TypedDict** as last resort when you can't modify existing code logic.
 
 # Extra
 
-## NamedTuple
-If your structured data is represented as tuples instead of dicts you can use [NamedTuple](https://docs.python.org/3/library/collections.html#collections.namedtuple). It adds type annotations and you can also access the elements by name.
+## Named tuples
+If you are fine representing structured data as tuples instead of dicts then you can use [NamedTuple](https://docs.python.org/3/library/collections.html#collections.namedtuple). It adds type annotations and you can also access the elements by name.
 ```py
 from typing import NamedTuple
 
@@ -233,9 +231,9 @@ assert book[0] == title
 assert book.title == title
 ```
 
-## NewType
-Another cool pattern for validating data is to define a new type for the same data as an existing type but, unlike type aliases, they are treated as different types by type checkers. This behavior is useful when certain functions should only accept values returned from other functions that perform some kind of data validation. We can achieve this behavior with [NewType](https://docs.python.org/3/library/typing.html).
-For example, if we had a `store` function for our data, we should only accept validated author dicts.
+## Distinct types
+Another cool pattern for validating data is to define a new type for the same data as an existing type but, unlike type aliases, the type checker treats them as different incompatible types. This behavior is useful when certain functions should only accept values returned from other functions that perform some kind of data validation. You can achieve this behavior with [NewType](https://docs.python.org/3/library/typing.html#newtype).
+For example, if you have a `store` function for the data, it should only accept validated author dicts.
 ```py
 from typing import NewType
 
@@ -264,11 +262,11 @@ store(validate(data))
 store(data)
 ```
 
-You can verify that the underlying data has not changed and that the returned value is still a dict. However, if we run mypy we get the following error
+You can verify that the underlying data hasn't changed and that the returned value is still a dict. However, if you run mypy again you get the following error
 ```
 error: Argument 1 to "store" has incompatible type "dict[str, object]"; expected "ValidatedAuthor"  [arg-type]
 ```
-While this pattern allows you to perform data validation using built-in data types, it is completely useless in Python because of mutability. The following code validates the data, then modifies it so that it becomes invalid, and then passes it to our function. The type checker does not report any errors. Oh well...
+While this pattern allows you to perform data validation using built-in data types, it's completely useless in Python because of mutability. The following code validates the data, then modifies it so that it becomes invalid, and then passes it to the function. The type checker doesn't report any errors.
 ```py
 validated_data = validate(data)
 validated_data["books"][0]["year"] = validated_data["year_of_birth"] - 1
