@@ -14,7 +14,7 @@ tags = []
 Paraphrasing the problem to more formal terms: given a list of contiguous vertices `(x, y)`, where `x` and `y` are non-negative integers, of a *simple* rectilinear polygon, find the area of the largest rectangle contained inside the polygon where 2 of the opposite corners are also vertices of the polygon.
 
 ### Observations
-- The input contains 496 vertices, and therefore 122760 (496C2) possible rectangles.
+- The input contains 496 vertices, and therefore `496C2=122760` possible rectangles.
 - The vertices are in order, meaning that they always share either the `x` or `y` coordinate.
 - The area of a point is `1`, therefore the formula for the area of the rectangle between opposite vertices `v1 = (x1, y1); v2 = (x2, y2)` is `(|x2 - x1| + 1) * (|y2 - y1| + 1)`. This means that contiguous vertices form rectangles with area != 0 and you can't skip them.
 - The vertices of a rectangle formed by `v1 = (x1, y1); v2 = (x2, y2)`, being `xmin = min(x1,x2); xmax = max(x1,x2); ymin = min(y1,y2); ymax = max(y1,y2);` are `(xmin, ymin), (min, ymax), (xmax, ymin), (xmax, ymax)`

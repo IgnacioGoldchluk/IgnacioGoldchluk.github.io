@@ -11,7 +11,7 @@ tags = [ ]
 +++
 
 ## Introduction
-The Django Object Relational Mapping (ORM) is an extremely powerful, yet dangerous tool of the Django framework, primarily because of its implicit query execution. Django loads records automatically from the DB whenever it needs to access a non-loaded field, which leads to potential performance issues and an unexpected number of queries executed.
+The Django Object Relational Mapping is an extremely powerful, yet dangerous tool of the Django framework, primarily because of its implicit query execution. Django loads records automatically from the DB whenever it needs to access a non-loaded field, which leads to potential performance issues and an unexpected number of queries executed.
 
 For example, imagine you have a `Person` model that contains a reference to another model `Country` as `country_of_residence`. If you execute the following code, Django performs 2 database queries
 ```
