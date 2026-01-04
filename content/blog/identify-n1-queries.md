@@ -11,37 +11,23 @@ tags = [ ]
 +++
 
 ## Introduction
-The Django ORM is an extremely powerful, yet dangerous tool of the Django framework, primarily because of its implicit query execution. The ORM loads records automatically from the DB whenever a non-loaded field is being accessed, providing for both a great developer experience and a footgun, or in this case, a minefield of performance issues.
+The Django Object Relational Mapping (ORM) is an extremely powerful, yet dangerous tool of the Django framework, primarily because of its implicit query execution. Django loads records automatically from the DB whenever it needs to access a non-loaded field, which leads to potential performance issues and an unexpected number of queries executed.
 
-For example, let's say we have a `Person` model that contains a reference to another model `Country` as `country_of_residence`. If we execute the following code, Django will perform 2 database queries
+For example, imagine you have a `Person` model that contains a reference to another model `Country` as `country_of_residence`. If you execute the following code, Django performs 2 database queries
 ```
 person = Person.objects.get(pk=id)
 person.country_of_residence
 ```
-One (explicit) query is executed to fetch the `Person` object, and one (implicit) query when we access `country_of_residence`. This behavior is transparent to the developer, we cannot tell just by reading the code when a DB query is being executed.
+The code executes one query to fetch the `Person` object, and an extra query when it accesses `country_of_residence`. This behavior is transparent to the developer, you can't tell simply by reading the code how many DB queries it executes without knowing the query that loaded the model initially.
 
-## N+1 queries Problem
+## N+1 queries problem
+While there is no formal definition for the N+1 queries problem, the most common definition you can often find online is *an operation that executes N+1 additional queries when accessing N records*.
+This definition is still incomplete and misleading because it conveys a sense of linear growth. It could be better defined as *an operation where the resulting number of SQL queries is Ω(N), where N is the number of records accessed*.
 
-There is no formal definition for the "N+1 queries problem". The most common definition I found is "an operation where N+1 queries are executed when accessing N records". I believe this definition is incomplete and misleading because it conveys a sense of linear growth. It could be better defined as: *An operation where the resulting number of SQL queries is Ω(N), where N is the number of records (rows) being accessed*.
-
-Additionally, one can also usually find the following code as an example of the N+1 problem
-```py
-people = Person.objects.all()
-
-for person in people:
-    print(f"{person.name} lives in {person.country_of_residence}")
-```
-Which is the equivalent of me explaining how not to introduce division by zero error with the following example
-```py
-def divide_by_zero(number: int):
-    return number / 0
-```
-Exemplifying the N+1 queries problem by showing that kind of trivial example makes it even more dangerous. It leads us to believe that since we did not write any loop where we access nested attributes, there is no way we could have introduced the N+1 queries problem in our codebase. The fact is, we can introduce the N+1 problem without writing a single loop, and unfortunately Django is extremely susceptible to this problem due to the aforementioned implicit query execution.
-
-In the following example we are going to accidentally introduce an N+1 queries problem, identify it, fix it, and learn how to prevent it in the future. 
+The following example "accidentally" introduces an N+1 queries problem. You are going to learn how to identify it, fix it and prevent it from happening again in the future.
 
 ## Example
-We are working on the new [Steam](https://en.wikipedia.org/wiki/Steam_(service)) and we have the task to implement the `players` endpoint to retrieve the list of players, which video games they've played and for how long. The JSON response must have the following format
+You are creating the new [Steam](https://en.wikipedia.org/wiki/Steam_(service)) and your task is to implement the `players` endpoint to retrieve the list of players, which video games they've played and for how long. The JSON response must have the following format
 ```
 [
   {
@@ -57,11 +43,11 @@ We are working on the new [Steam](https://en.wikipedia.org/wiki/Steam_(service))
 ```
 
 ### Setup
-Let's go over the code without much explanation, if you don't understand something please refer to the (awesome) Django and DRF docs.
+The example contains a `Player` model, `Game` model, and the junction table `PlayTime` each with their corresponding serializers.
 
-We have a `Player` model, `Game` model, and the junction table `PlayTime` each with their corresponding serializers.
+You could have added a `ManyToMany` with a `through` for `Player <-> Game`, but it isn't needed for this example.
 
-We could have added a `ManyToMany` with a `through` for `Player <-> Game`, but it is not needed for this example.
+If something isn't clear from the files, you can refer to the [Django Rest Framework](https://www.django-rest-framework.org/) documentation.
 
 models file
 ```py
@@ -88,7 +74,7 @@ class PlayTime(models.Model):
 
 serializers file.
 
-Note that the serializers are implemented in the direction of `Player -> PlayTime -> Game`. If we had to implement `Game -> PlayTime -> Player` to list the players with most hours ~~wasted~~ spent for each game we'd have to implement different serializers.
+Note that the serializers go in the direction of `Player -> PlayTime -> Game`. If you had to implement `Game -> PlayTime -> Player` to list the players with most hours ~~wasted~~ spent for each game, then you would have to implement different serializers.
 ```py
 # games/serializers.py
 from rest_framework import serializers
@@ -153,7 +139,7 @@ urlpatterns = [
 ```
 
 ### Testing
-The following test creates 2 players with 3 (different) games played each, verifies that both players are present in the response and also verifies the games they've played. For brevity, we are not verifying `hours_played` or any ordering in either the `Player` list or the games played list for each player.
+The following test creates 2 players with 3 different games played each, then verifies that both players are present in the response and finally verifies the games they've played. For simplicity, it skips verifying `hours_played` or any ordering in either the `Player` list or the games played list for each player.
 
 #### Functionality
 ```py
@@ -178,14 +164,13 @@ class TestPlayerView:
         assert all(played in playtimes_titles for played in p2_played)
 ```
 
-The test is using `pytest` with `pytest-django` and `pytest-factoryboy`. I find `pytest` much better `unittest` in every aspect. Also, registering factories as fixtures with `pytest-factoryboy` helps identifying complex test setups. If we need more than 3 factories in a single test then we should split the test into multiple tests, or create a new fixture that performs all the setup.
+The test is using `pytest` with `pytest-django` and `pytest-factoryboy`. Registering factories as fixtures with `pytest-factoryboy` helps identifying complex test setups. If you need more than 3 factories in a single test then you should probably split the test into multiple tests, or create a new fixture that performs all the setup.
 
-We run `pytest` and the test passes, great. We can praise ourselves (and Django) for being so productive. Or maybe not.
+If you run `pytest` the test should pass.
 
 #### Number of queries
-Let's add one more test to verify how many DB queries the new endpoint is performing. Let's create 20 players with 20 games each *(1)*, since it seems like a reasonable number for a future paginated response. Thanks to the `django_assert_max_num_queries` fixture from `pytest-django` we can easily verify how many queries we've made. We'll take a guess for now and set a max of 5 queries *(1)*, sounds like a reasonable number right?
+You can add a new test to verify how many DB queries the new endpoint is performing. The test creates 20 players with 20 games each. The `django_assert_max_num_queries` fixture from `pytest-django` asserts on the number of queries made in a specific context. You can start with a guess of 5 max queries when writing the test, and change the number later once you know the final value.
 
-*(1) I am an engineer, I am legally allowed (and sometimes encouraged) to define random numbers heuristically*
 ```py
 # test/games/test_views.py
 @pytest.mark.django_db
@@ -207,13 +192,13 @@ class TestPlayerView:
             api_client.get("/games/players", format="json").json()
 ```
 
-We run the test and we get
+Running the test results in the following
 ```
 FAILED test/games/test_views.py::TestPlayerView::test_player_list_num_queries - Failed: Expected to perform 5 queries or less but 421 were done (add -v option to show queries)
 ```
-That's 2 orders of magnitude higher than our expected value! But our code is so simple and we did not write any loops. What happened? How is this possible?
+That's 2 orders of magnitude more queries than the expected value. How's this possible?
 
-If we follow pytest advice and run again as `pytest -v` we get see the following
+If you follow pytest advice and run again as `pytest -v` you get the following output
 ```
 SELECT "games_player"."id", "games_player"."name" FROM "games_player"
 E
@@ -224,26 +209,26 @@ E
 E               SELECT "games_game"."id", "games_game"."title" FROM "games_game" WHERE "games_game"."id" = 2 LIMIT 21
 [...]
 ```
-We are performing:
+The code is performing:
 - 1 query to get the `Player` records. 
-- 20 queries (1 per `Player`) to fetch the related `PlayTime` records.
-- 400 queries (20 per `PlayTime`) to fetch the `Game` records.
+- 20 queries to fetch the related `PlayTime` records, 1 per `Player`.
+- 400 queries to fetch the `Game` records, 20 per `PlayTime`.
 
-Looks like we have an N+1 problem, well actually an N^2 problem. Now you see why I said the definition of "N extra queries" is misleading.
+Looks like the code has an N+1 query problem.
 
 ### Solution
 
-#### prefetch_related for one to many
-Let's start with the easiest part. We can fetch all the `PlayTime` records in a single query with the `prefetch_related` method. `prefetch_related` works by performing a single query for all the related objects separately and then joins the result in Python.
+#### Preloading related objects in a separate query
+Starting with the easiest part, you can fetch all the `PlayTime` records in a single query with the `prefetch_related` method. `prefetch_related` works by performing a single query for all the related objects separately and then joins the result in Python.
 
-Let's add a `prefetch_related("playtimes")` to the `queryset` attribute of our view
+Adding a `prefetch_related("playtimes")` to the `queryset` attribute of the view
 ```py
 # games/views.py
 class PlayerView(generics.ListAPIView):
     queryset = Player.objects.prefetch_related("playtimes").all() # NEW
     serializer_class = PlayerSerializer
 ```
-We only need 1 query now to fetch all the `PlayTime` records instead of N. If we run the test again we should see 402 queries.
+You only need 1 query to fetch all the `PlayTime` records instead of N. If you run the test again you should see 402 queries.
 ```
 E               Failed: Expected to perform 5 queries or less but 402 were done
 E
@@ -260,18 +245,18 @@ E
 E               SELECT "games_game"."id", "games_game"."title" FROM "games_game" WHERE "games_game"."id" = 2 LIMIT 21
 [...]
 ```
-While we could do the same for the `Game` records, i.e. add `prefetch_related("playtimes__game")`, verify that we perform only 3 queries and pat ourselves on the back, it would not be efficient. This would be the resulting query
+While you could do the same for the `Game` records by adding `prefetch_related("playtimes__game")` and verifying that it performs only 3 queries, it would be inefficient. This would be the resulting query
 ```
 SELECT "games_game"."id", "games_game"."title" FROM "games_game" WHERE "games_game"."id" IN (1, 2, ..., 399, 400)
 ```
-Yes, it's a single query, but it can be a potentially slow query. We can do better.
+It's a single query, but it can still be a potentially slow query. You can improve this with some effort.
 
-#### Prefetch and select_related
-Django comes with both `prefetch_related` and `select_related`. As per the documentation: *select_related is limited to single-valued relationships - foreign key and one-to-one.* We could not use `select_related` before in `Player->PlayTime` because it is a one-to-many.
+#### Prefetch object and `select_related`
+Django comes with both `prefetch_related` and `select_related`. As per the documentation: *select_related is limited to single-valued relationships - foreign key and one-to-one.* You couldn't use `select_related` before in `Player->PlayTime` because it's a one-to-many.
 
-Unlike `Player->PlayTime` which was a one-to-many, `Game` is a foreign key of `PlayTime`. That means we should be able to add a `select_related("game")` somewhere and fetch both `PlayTime` and `Game` in a single query.
+Unlike `Player->PlayTime` which was a one-to-many, `Game` is a foreign key of `PlayTime`. That means you should be able to add a `select_related("game")` somewhere and fetch both `PlayTime` and `Game` in a single query.
 
-If we read through Django's documentation, we'll come across the `Prefetch` object. It has the same behavior as `prefetch_related`, but it gives us more control over the prefetch action. We can pass a `queryset` parameter to `Prefetch`, that is where the `select_related("game")` should go, let's update the views file
+If you read Django's documentation, you can find the `Prefetch` object. It has the same behavior as `prefetch_related`, but it gives you more control over the prefetch action. You can pass a `queryset` parameter to `Prefetch`, which is where `select_related("game")` should go. The `views` file then looks like
 ```py
 # games/views.py
 from django.db.models import Prefetch
@@ -287,36 +272,35 @@ class PlayerView(generics.ListAPIView):
     )
     serializer_class = PlayerSerializer
 ```
-If we run the test again we'll see only 2 queries, which is the lowest possible for this endpoint.
-
-Our job is done :)
+If you run the test again you see only 2 queries, which is the lowest possible for this endpoint.
 
 ### Preventing N+1 and best practices
 
 #### General guidelines
-"N+1 problem" is a very deceiving name. First of all "N+1" assumes linear growth, and as we saw in the example, we can get quadratic growth or higher. Second, it is called "problem" instead of "bug". I believe it should be treated like any other bug, one should assume it's present until proven otherwise.
+*N+1 problem* is a very deceiving name. First of all "N+1" assumes linear growth, and as you saw in the example, it's possible to get quadratic growth or higher. Second, it's called "problem" instead of bug, you should always treat the potential existence of N+1 as a bug.
 
 Here are some guidelines on how to test for the N+1 problem in Django codebases
 #### Test your endpoints
-1. List-type endpoints. Add a test with a significant number of results that only checks the number of queries. Verify the correct behavior of the endpoint in another test. This is what we did in the example above.
-2. Detail-type endpoints. Create a record for the worst case scenario, where all of the (nullable) relationships have values. Verify the correct behavior of the endpoint in another test.
-3. If you think "this code is too simple, there is no way I added an N+1 query problem" then prove it. Another developer might add an extra field to an endpoint/serializer/model, accidentally introducing an N+1 problem. The only way to prevent it is by writing tests.
+
+1. List-type endpoints. Add a test with a significant number of results that only checks the number of queries. Verify the correct behavior of the endpoint in another test. This is what you did in the previous example.
+2. Detail-type endpoints. Create a record for the worst case scenario, where all of the relationships have values. Verify the correct behavior of the endpoint in another test.
+3. If you think "this code is too simple, there is no way it contains an N+1 query problem" then prove it. Another developer might add an extra field to an endpoint/serializer/model, accidentally introducing an N+1 problem. The only way to prevent it's by writing tests.
 
 #### Avoid properties that access relationships
-While we could not tell in `person.country_of_residence` that we were performing an extra query, we could at least suspect it from its type, since it could not be represented as a DB column. Using nested properties in Django models obscures the queries even further, especially when they access related objects.
+While you can't detect that `person.country_of_residence` performs an extra query, you can suspect it from its type, since it can't be a DB column. Using nested properties in Django models obscures the queries even further, especially when they access related objects.
 
-Imagine we added the following to `PlayTime`
+Imagine you add the following method to `PlayTime` model
 ```py
 @property
 def game_title(self) -> str:
     return self.game.title
 ```
-This would be misleading and dangerous. A developer working with the `PlayTime` object might assume that `game_title` is a field of `PlayTime` since it is a string, therefore accessing `play_time.game_title` couldn't possibly trigger a DB access. However, if we replaced the code with `play_time.game.title` it becomes obvious that we must either preload `game` or perform an additional query.
+This code is misleading and dangerous. Another developer working with the `PlayTime` object might assume that `game_title` is a field of `PlayTime` in the DB since it's a string, therefore accessing `play_time.game_title` without preloading `Game`. You should be careful with properties that rely on related objects, they're a common source of N+1 queries problem in Django's Object Relational Mapping.
 
 ### Custom querysets
-The code we wrote is fine, it works and it is efficient, but we can improve it in terms of design. We are exposing too many DB details in the views file, and our query is not reusable. If we had to write a new view that also fetches `Player->PlayTime->Game` we would have to copy & paste the `queryset` attribute everywhere.
+The code so far is correct, it works and it's efficient, but you can improve it in terms of design. The program is exposing too many DB details in the `views` file, and the query isn't reusable. If you have to write a new view that also fetches `Player->PlayTime->Game` you need to copy & paste the `queryset` attribute everywhere.
 
-Django allows us to define custom `QuerySet` which we can use to abstract and reuse common patterns for accessing/filtering data. Let's add a `managers.py` to our app with custom querysets and update our models
+Django lets you define custom `QuerySet` which you can use to abstract and reuse common patterns for accessing/filtering data. You can create a  `managers.py` with custom querysets and use them in the models
 ```py
 # games/managers.py
 from django.db import models
@@ -356,8 +340,8 @@ class PlayTime(models.Model):
 
     objects = PlayTimesQuerySet.as_manager() # NEW
 ```
-And finally let's update our views file
 
+Updating the views file
 ```py
 # games/views.py
 from rest_framework import generics

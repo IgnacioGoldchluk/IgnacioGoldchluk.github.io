@@ -13,3 +13,8 @@ untyped
 validator(s)?
 dunder
 stdlib
+(?i)queryset(s)?
+(?i)preload(ing)?
+(?i)prefetch
+serializer(s)?
+footgun
