@@ -18,3 +18,8 @@ stdlib
 (?i)prefetch
 serializer(s)?
 footgun
+(?i)nodejs
+Altium
+PCB
+EDA
+(E)?CAD
